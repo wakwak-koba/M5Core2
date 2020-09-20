@@ -9,7 +9,7 @@
 
 #define CST_DEVICE_ADDR 0x38
 
-typedef struct point
+struct TouchPoint_t
 {
     int x;
     int y;
@@ -17,7 +17,7 @@ typedef struct point
     unsigned long ticks;
     
     inline std::string toString() {
-        std::string res = "position:(";
+        std::string res = "point:(";
         char val[10];
         snprintf(val, sizeof(val), "%03d,%03d", x, y);
         res += val;
@@ -30,9 +30,9 @@ typedef struct point
         res += val;
         return res;
     }
-}TouchPoint_t;
+};
 
-typedef struct HotZone
+struct HotZone_t
 {
     virtual inline bool inHotZone(TouchPoint_t point) = 0;
     virtual inline bool inHotZoneDoFun(TouchPoint_t point)
@@ -48,23 +48,23 @@ typedef struct HotZone
     std::string        name;
     void (*_fun)();
 
-    typedef struct {
+    struct EventArgs_t {
         TouchPoint_t point;
         std::deque<TouchPoint_t*> locusPoints;
-        bool    suppress = true;        
-    }eventArgs_T;
+        bool    suppress = true;
+    };
     
-    std::function<void(HotZone*, eventArgs_T*)> onClick;
-    std::function<void(HotZone*, eventArgs_T*)> onPressChanged;
-    std::function<void(HotZone*, eventArgs_T*)> onMove;
+    std::function<void(HotZone_t*, EventArgs_t*)> onClick;
+    std::function<void(HotZone_t*, EventArgs_t*)> onPressChanged;
+    std::function<void(HotZone_t*, EventArgs_t*)> onMove;
     
     virtual inline std::string toString() = 0;
 
-}HotZone_t;
+};
 
-typedef struct HotZoneRect : public HotZone
+struct HotZoneRect_t : public HotZone_t
 {
-    HotZoneRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, void (*fun)() = nullptr){
+    HotZoneRect_t(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, void (*fun)() = nullptr){
         _x0 = x0; 
         _y0 = y0;
         _x1 = x1;
@@ -72,7 +72,7 @@ typedef struct HotZoneRect : public HotZone
         _fun = fun;
 
     }
-    HotZoneRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, std::string name) : HotZoneRect(x0, y0, x1, y1) {
+    HotZoneRect_t(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, std::string name) : HotZoneRect_t(x0, y0, x1, y1) {
         this->name = name;
     }
     inline void setZone(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, void (*fun)() = nullptr )
@@ -110,16 +110,16 @@ typedef struct HotZoneRect : public HotZone
     }
 };
 
-typedef struct HotZoneCircle : public HotZone
+struct HotZoneCircle_t : public HotZone_t
 {
-    HotZoneCircle(uint16_t x, uint16_t y, uint16_t r, void (*fun)() = nullptr){
+    HotZoneCircle_t(uint16_t x, uint16_t y, uint16_t r, void (*fun)() = nullptr){
         this->x = x;
         this->y = y;
         this->r = r;
         _fun = fun;
 
     }
-    HotZoneCircle(uint16_t x, uint16_t y, uint16_t r, std::string name) : HotZoneCircle(x, y, r) {
+    HotZoneCircle_t(uint16_t x, uint16_t y, uint16_t r, std::string name) : HotZoneCircle_t(x, y, r) {
         this->name = name;
     }
 
@@ -145,9 +145,9 @@ typedef struct HotZoneCircle : public HotZone
     }
 };
 
-typedef struct HotZoneTriangle : public HotZone
+struct HotZoneTriangle_t : public HotZone_t
 {
-    HotZoneTriangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, void (*fun)() = nullptr){
+    HotZoneTriangle_t(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, void (*fun)() = nullptr){
         this->x0 = x0;
         this->y0 = y0;
         this->x1 = x1;
@@ -157,7 +157,7 @@ typedef struct HotZoneTriangle : public HotZone
         _fun = fun;
 
     }
-    HotZoneTriangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, std::string name) : HotZoneTriangle(x0, y0, x1, y1, x2, y2) {
+    HotZoneTriangle_t(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, std::string name) : HotZoneTriangle_t(x0, y0, x1, y1, x2, y2) {
        this->name = name;
     }
 
@@ -196,6 +196,24 @@ typedef struct HotZoneTriangle : public HotZone
     }
 };
 
+struct HotZoneBtn_t : public HotZoneRect_t
+{
+    HotZoneBtn_t(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, std::string name) : HotZoneRect_t(x0, y0, x1, y1, name) {
+        ;
+    }
+public:
+    uint8_t read();
+    uint8_t isPressed();
+    uint8_t isReleased();
+    uint8_t wasPressed();
+    uint8_t wasReleased();
+    uint8_t pressedFor(uint32_t ms);
+    uint8_t releasedFor(uint32_t ms);
+    uint8_t wasReleasefor(uint32_t ms);
+    uint32_t lastChange();
+private:
+};
+
 class touch
 {
 private:
@@ -212,32 +230,33 @@ public:
     void begin();
     bool ispressed();
     TouchPoint_t getPressPoint();
-    HotZoneRect* createHotZone(uint16_t x0, uint16_t y0, uint16_t w, uint16_t h);
+    HotZoneRect_t* createHotZone(uint16_t x0, uint16_t y0, uint16_t w, uint16_t h);
 private:
     int readTouchtoBuff(uint16_t *posx, uint16_t *posy);
 
 public:
-    std::function<void(HotZone*, HotZone::eventArgs_T*)> onPressChanged;
-    std::function<void(HotZone*, HotZone::eventArgs_T*)> onMove;
+    std::function<void(HotZone_t*, HotZone_t::EventArgs_t*)> onClick;
+    std::function<void(HotZone_t*, HotZone_t::EventArgs_t*)> onPressChanged;
+    std::function<void(HotZone_t*, HotZone_t::EventArgs_t*)> onMove;
     
-    HotZoneRect BtnA    {  0, 240,        119, UINT16_MAX, "buttonA"};
-    HotZoneRect BtnB    {180, 240,        209, UINT16_MAX, "buttonB"};
-    HotZoneRect BtnC    {240, 240, UINT16_MAX, UINT16_MAX, "buttonC"};
+    HotZoneBtn_t BtnA {  0, 240,        119, UINT16_MAX, "buttonA"};
+    HotZoneBtn_t BtnB {180, 240,        209, UINT16_MAX, "buttonB"};
+    HotZoneBtn_t BtnC {240, 240, UINT16_MAX, UINT16_MAX, "buttonC"};
 
-    HotZoneCircle* createHotZone(uint16_t x, uint16_t y, uint16_t r);
-    HotZoneTriangle* createHotZone(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
+    HotZoneCircle_t* createHotZone(uint16_t x, uint16_t y, uint16_t r);
+    HotZoneTriangle_t* createHotZone(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 
-    HotZoneRect* addHotZone(uint16_t x0, uint16_t y0, uint16_t w, uint16_t h);
-    HotZoneCircle* addHotZone(uint16_t x, uint16_t y, uint16_t r);
-    HotZoneTriangle* addHotZone(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
+    HotZoneRect_t* addHotZone(uint16_t x0, uint16_t y0, uint16_t w, uint16_t h, std::string name = nullptr);
+    HotZoneCircle_t* addHotZone(uint16_t x, uint16_t y, uint16_t r, std::string name = nullptr);
+    HotZoneTriangle_t* addHotZone(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, std::string name = nullptr);
 
-    bool addHotZone(HotZone* zone);
-    bool removeHotZone(HotZone* zone, bool del = true);
+    bool addHotZone(HotZone_t* zone);
+    bool removeHotZone(HotZone_t* zone, bool del = true);
     void handle();
 
 private:
-    HotZoneRect baseZone {0, 0, UINT16_MAX, 239, "somewhere"};
-    std::deque<HotZone*> m_hotZones;
+    HotZoneRect_t baseZone {0, 0, UINT16_MAX, 239, "somewhere"};
+    std::deque<HotZone_t*> m_hotZones;
     std::deque<TouchPoint_t> m_locus[2];
 
     int readTouchtoBuff(TouchPoint_t *point1, TouchPoint_t *point2);
