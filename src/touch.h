@@ -246,9 +246,9 @@ public:
     HotZoneCircle_t* createHotZone(uint16_t x, uint16_t y, uint16_t r);
     HotZoneTriangle_t* createHotZone(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 
-    HotZoneRect_t* addHotZone(uint16_t x0, uint16_t y0, uint16_t w, uint16_t h, std::string name = nullptr);
-    HotZoneCircle_t* addHotZone(uint16_t x, uint16_t y, uint16_t r, std::string name = nullptr);
-    HotZoneTriangle_t* addHotZone(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, std::string name = nullptr);
+    HotZoneRect_t* addHotZone(uint16_t x0, uint16_t y0, uint16_t w, uint16_t h, std::string name = {});
+    HotZoneCircle_t* addHotZone(uint16_t x, uint16_t y, uint16_t r, std::string name = {});
+    HotZoneTriangle_t* addHotZone(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, std::string name = {});
 
     bool addHotZone(HotZone_t* zone);
     bool removeHotZone(HotZone_t* zone, bool del = true);
