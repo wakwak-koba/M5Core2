@@ -2,18 +2,15 @@
 
 const uint16_t BoardColor = TFT_DARKGREEN;
 
-void onClick_zone(HotZone* zone, HotZone::eventArgs_T* e)  {
-  Serial.print(zone->name.c_str());
-  Serial.println(" Click.   ");
-
+void onClick_zone(HotZone_t* zone, HotZone_t::EventArgs_t* e)  {
   const int border1 = 10, border2 = border1 / 1.41F;
   const int margin = 5;
   static int touchCount = 0;
-  auto z = (HotZoneCircle*)zone;
+  auto z = (HotZoneCircle_t*)zone;
   if(++touchCount % 2)  { // Maru
     M5.Lcd.fillCircle(z->x, z->y, z->r - margin, RED);
     M5.Lcd.fillCircle(z->x, z->y, z->r - border1 - margin, BoardColor);
-  } else {                // Pake
+  } else {                // Peke
     int r = z->r - margin * 2;
     M5.Lcd.fillRect(z->x - r, z->y - r, r * 2, r * 2, YELLOW);
     M5.Lcd.fillTriangle(z->x, z->y - border2, z->x - r, z->y - r - border2, z->x + r, z->y - r - border2, BoardColor);
@@ -27,8 +24,7 @@ void onClick_zone(HotZone* zone, HotZone::eventArgs_T* e)  {
 void setup() {
   M5.begin(true, false, true, false);
   M5.Lcd.fillScreen(BLACK);
-
-  Serial.println("setup");
+  M5.Touch.BtnB.onClick = [] (HotZone_t* zone, HotZone_t::EventArgs_t* e) {ESP.restart();};
 
 // drawTable
   const int box_w = 100, box_h = 60, box_c = 3, box_r = 3;
