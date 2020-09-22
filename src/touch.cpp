@@ -198,101 +198,87 @@ void touch::handle()
         };
         touchPoint nowTouch[2];
         int now_count = readTouchtoBuff(&nowTouch[0].point, &nowTouch[1].point);
-
+        
+        if(last_count == 2 && now_count < 2) {
+            auto last_p1 = m_locus[0].back();
+            auto last_p2 = m_locus[1].back();
+            auto d1 = calcDistance(&last_p1, &nowTouch[0].point);
+            auto d2 = calcDistance(&last_p2, &nowTouch[0].point);
+            if(d1 <= d2) {
+                nowTouch[1].point = last_p2;
+                nowTouch[1].point.event = 1;
+            } else {
+                nowTouch[1].point = last_p1;
+                nowTouch[1].point.event = 1;
+            }
+        }
+        
 /*      if(now_count > 0) {
             Serial.printf("%lu %d", nowTouch[0].point.ticks, now_count);
             Serial.println();
         }*/
 
-        // 軌跡を格納する
-        if(now_count == 2) {
-            if(m_locus[0].size() == 0 && m_locus[1].size() == 0) {
-                // 0指→2指
+        // 軌跡の格納先を選択する
+        
+        //  Serial.printf("(%03d,%03d,%d) (%03d,%03d,%d) last_count:%d now_count:%d ", nowTouch[0].point.x, nowTouch[0].point.y, nowTouch[0].point.event, nowTouch[1].point.x, nowTouch[1].point.y, nowTouch[1].point.event, last_count, now_count);
+        if(last_count == 0 && now_count == 1 || last_count == 1 && now_count == 0) {
+            nowTouch[0].locus = &m_locus[0];
+            //Serial.print("nowTouch[0].locus = &m_locus[0];");
+        } else if(last_count == 0 && now_count == 2) {
+            nowTouch[0].locus = &m_locus[0];
+            nowTouch[1].locus = &m_locus[1];
+            //Serial.print("nowTouch[0].locus = &m_locus[0];nowTouch[1].locus = &m_locus[1];");
+        } else if(last_count == 2) {
+            auto last_p1 = m_locus[0].back();
+            auto last_p2 = m_locus[1].back();
+            int d1 = calcDistance(&last_p1, &nowTouch[0].point);
+            int d2 = calcDistance(&last_p2, &nowTouch[0].point);
+            //Serial.printf("(%03d,%03d),(%03d,%03d) d1:%d d2:%d ", nowTouch[0].point.x, nowTouch[0].point.y, last_p1.x, last_p1.y, last_p2.x, last_p2.y, d1, d2);
+            if(d1 <= d2) {
                 nowTouch[0].locus = &m_locus[0];
                 nowTouch[1].locus = &m_locus[1];
-/*                Serial.printf("0_2");
-                Serial.println();*/
-                
-            } else if(m_locus[0].size() > 0) {
-                // 1指→2指
-                auto last_p1 = m_locus[0].back();
-                int d1 = calcDistance(&last_p1, &nowTouch[0].point);
-                int d2 = calcDistance(&last_p1, &nowTouch[1].point);
-/*                Serial.printf("1_2[0] (%03d,%03d) m_locus[0].size=%d d1:%d d2:%d", last_p1.x, last_p1.y, m_locus[0].size() , d1, d2);
-                Serial.println();*/
-                if(d1 <= d2) {
-                    nowTouch[0].locus = &m_locus[0];
-                    nowTouch[1].locus = &m_locus[1];
-                } else {
-                    nowTouch[0].locus = &m_locus[1];
-                    nowTouch[1].locus = &m_locus[0];
-                }
-            } else if(m_locus[1].size() > 0) {
-                // 1指→2指
-                auto last_p2 = m_locus[1].back();
-                int d1 = calcDistance(&last_p2, &nowTouch[0].point);
-                int d2 = calcDistance(&last_p2, &nowTouch[1].point);
-/*                Serial.printf("1_2[1] (%03d,%03d) m_locus[1].size=%d d1:%d d2:%d", last_p2.x, last_p2.y, m_locus[1].size() , d1, d2);
-                Serial.println();*/
-                if(d1 <= d2) {
-                    nowTouch[0].locus = &m_locus[1];
-                    nowTouch[1].locus = &m_locus[0];
-                } else {
-                    nowTouch[0].locus = &m_locus[0];
-                    nowTouch[1].locus = &m_locus[1];
-                }
-            }
-        } else if(now_count == 1) {
-//            Serial.printf("\t%lu (%03d,%03d)\t", nowTouch[0].point.ticks, nowTouch[0].point.x, nowTouch[0].point.y);
-            if(m_locus[0].size() == 0 && m_locus[1].size() == 0) {
-                // 0指→1指
-                nowTouch[0].locus = &m_locus[0];
-//                Serial.printf("0_2");
-            } else if (m_locus[0].size() > 0 && m_locus[1].size() > 0) {
-                // 2指→1指(近い方を探す)
-                auto last_p1 = m_locus[0].back();
-                auto last_p2 = m_locus[1].back();
-                auto d1 = calcDistance(&last_p1, &nowTouch[0].point);
-                auto d2 = calcDistance(&last_p2, &nowTouch[0].point);
-/*                Serial.printf("2_1[0] (%03d,%03d),(%03d,%03d) d1:%d d2:%d", last_p1.x, last_p1.y, last_p2.x, last_p2.y, d1, d2);
-                Serial.println();*/
-                if(d1 <= d2) {
-                    nowTouch[0].locus = &m_locus[0];
-//                    nowTouch[1].locus = &m_locus[1];
-                } else {
-                    nowTouch[0].locus = &m_locus[1];
-//                   nowTouch[1].locus = &m_locus[0];
-                }
-            } else if(m_locus[0].size() > 0)
-                // 1指→1指
-                nowTouch[0].locus = &m_locus[0];
-            else if(m_locus[1].size() > 0)
+                //Serial.print("nowTouch[0].locus = &m_locus[0];nowTouch[1].locus = &m_locus[1];");
+            } else {
                 nowTouch[0].locus = &m_locus[1];
-        } else if(now_count == 0) {
-            if(m_locus[0].size() > 0 && m_locus[1].size() > 0) {
-                // 2指→0指
-                auto last_p1 = m_locus[0].back();
-                auto last_p2 = m_locus[1].back();
-                auto d1 = calcDistance(&last_p1, &nowTouch[0].point);
-                auto d2 = calcDistance(&last_p2, &nowTouch[0].point);
-                if(d1 <= d2) {
-                    nowTouch[0].locus = &m_locus[0];
-                    nowTouch[1].locus = &m_locus[1];
-                } else {
-                    nowTouch[0].locus = &m_locus[1];
-                    nowTouch[1].locus = &m_locus[0];
-                }
-            } else if(m_locus[0].size() > 0) {
-                // 1指→0指
-                nowTouch[0].locus = &m_locus[0];
+                nowTouch[1].locus = &m_locus[0];
+                //Serial.print("nowTouch[0].locus = &m_locus[1];nowTouch[1].locus = &m_locus[0];");
             }
+        } else if(last_count == 1 && m_locus[0].size() > 0) {
+            auto last_p1 = m_locus[0].back();
+            int d1 = calcDistance(&last_p1, &nowTouch[0].point);
+            int d2 = calcDistance(&last_p1, &nowTouch[1].point);
+            //Serial.printf("(%03d,%03d) d1:%d d2:%d ", last_p1.x, last_p1.y, d1, d2);
+            if(d1 <= d2) {
+                nowTouch[0].locus = &m_locus[0];
+                nowTouch[1].locus = &m_locus[1];
+                //Serial.print("nowTouch[0].locus = &m_locus[0];nowTouch[1].locus = &m_locus[1];");
+            } else {
+                nowTouch[0].locus = &m_locus[1];
+                nowTouch[1].locus = &m_locus[0];
+                //Serial.print("nowTouch[0].locus = &m_locus[1];nowTouch[1].locus = &m_locus[0];");
+            }        
+        } else if(last_count == 1 && m_locus[1].size() > 0) {
+            auto last_p1 = m_locus[1].back();
+            int d1 = calcDistance(&last_p1, &nowTouch[0].point);
+            int d2 = calcDistance(&last_p1, &nowTouch[1].point);
+            //Serial.printf("(%03d,%03d) d1:%d d2:%d ", last_p1.x, last_p1.y, d1, d2);
+            if(d1 <= d2) {
+                nowTouch[0].locus = &m_locus[1];
+                nowTouch[1].locus = &m_locus[0];
+                //Serial.print("nowTouch[0].locus = &m_locus[1];nowTouch[1].locus = &m_locus[0];");
+            } else {
+                nowTouch[0].locus = &m_locus[0];
+                nowTouch[1].locus = &m_locus[1];
+                //Serial.print("nowTouch[0].locus = &m_locus[0];nowTouch[1].locus = &m_locus[1];");
+            }        
         }
+        //Serial.println();
         
         for(int i = 0; i < 2; i++) {
             if(nowTouch[i].locus != nullptr) {
                 if(nowTouch[i].locus->size() > 0) {
-                    auto last_p = nowTouch[i].locus->end();
-                    if((*last_p).x != nowTouch[i].point.x || (*last_p).y != nowTouch[i].point.y || (*last_p).event != nowTouch[i].point.event)
+                    auto last_p = nowTouch[i].locus->back();
+                    if(last_p.x != nowTouch[i].point.x || last_p.y != nowTouch[i].point.y || last_p.event != nowTouch[i].point.event)
                         nowTouch[i].locus->push_back(nowTouch[i].point);
                 } else
                     nowTouch[i].locus->push_back(nowTouch[i].point);
